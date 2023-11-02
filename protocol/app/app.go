@@ -90,6 +90,10 @@ import (
 	"github.com/spf13/cast"
 	"google.golang.org/grpc"
 
+	"github.com/cosmos/cosmos-sdk/x/authz"
+	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
+	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
+
 	// App
 	"github.com/dydxprotocol/v4-chain/protocol/app/basic_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/app/flags"
@@ -241,6 +245,8 @@ type App struct {
 	FeeGrantKeeper        feegrantkeeper.Keeper
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
 
+	AuthzKeeper authzkeeper.Keeper
+
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
@@ -356,6 +362,7 @@ func New(
 		sendingmoduletypes.StoreKey,
 		delaymsgmoduletypes.StoreKey,
 		epochsmoduletypes.StoreKey,
+		authzkeeper.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(
 		paramstypes.TStoreKey,
@@ -459,6 +466,13 @@ func New(
 		app.BankKeeper, authtypes.FeeCollectorName, lib.GovModuleAddress.String())
 
 	app.FeeGrantKeeper = feegrantkeeper.NewKeeper(appCodec, keys[feegrant.StoreKey], app.AccountKeeper)
+
+	app.AuthzKeeper = authzkeeper.NewKeeper(
+		keys[authzkeeper.StoreKey],
+		appCodec,
+		app.BaseApp.MsgServiceRouter(),
+		app.AccountKeeper,
+	)
 
 	// register the staking hooks
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
@@ -905,6 +919,7 @@ func New(
 		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper, app.getSubspace(banktypes.ModuleName)),
 		capability.NewAppModule(appCodec, *app.CapabilityKeeper, false),
 		feegrantmodule.NewAppModule(appCodec, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.interfaceRegistry),
+		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		crisis.NewAppModule(app.CrisisKeeper, skipGenesisInvariants, app.getSubspace(crisistypes.ModuleName)),
 		gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper, app.getSubspace(govtypes.ModuleName)),
 		slashing.NewAppModule(
@@ -987,6 +1002,7 @@ func New(
 		rewardsmoduletypes.ModuleName,
 		sendingmoduletypes.ModuleName,
 		delaymsgmoduletypes.ModuleName,
+		authz.ModuleName,
 	)
 
 	app.ModuleManager.SetOrderCommiters(
@@ -1023,6 +1039,7 @@ func New(
 		rewardsmoduletypes.ModuleName,
 		epochsmoduletypes.ModuleName,
 		delaymsgmoduletypes.ModuleName,
+		authz.ModuleName,
 		blocktimemoduletypes.ModuleName, // Must be last
 	)
 
@@ -1062,6 +1079,7 @@ func New(
 		rewardsmoduletypes.ModuleName,
 		sendingmoduletypes.ModuleName,
 		delaymsgmoduletypes.ModuleName,
+		authz.ModuleName,
 	)
 
 	// NOTE: by default, set migration order here to be the same as init genesis order,
@@ -1097,6 +1115,7 @@ func New(
 		rewardsmoduletypes.ModuleName,
 		sendingmoduletypes.ModuleName,
 		delaymsgmoduletypes.ModuleName,
+		authz.ModuleName,
 
 		// Auth must be migrated after staking.
 		authtypes.ModuleName,
@@ -1473,6 +1492,7 @@ func initParamsKeeper(
 	paramsKeeper.Subspace(crisistypes.ModuleName)
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibcexported.ModuleName)
+	paramsKeeper.Subspace(authz.ModuleName)
 
 	return paramsKeeper
 }

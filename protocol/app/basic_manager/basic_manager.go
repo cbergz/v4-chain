@@ -3,6 +3,7 @@ package basic_manager
 import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	"github.com/cosmos/cosmos-sdk/x/consensus"
@@ -73,6 +74,7 @@ var (
 		evidence.AppModuleBasic{},
 		transfer.AppModuleBasic{},
 		consensus.AppModuleBasic{},
+		authzmodule.AppModuleBasic{},
 
 		// Custom modules
 		pricesmodule.AppModuleBasic{},
