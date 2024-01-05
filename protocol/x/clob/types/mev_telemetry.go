@@ -9,6 +9,7 @@ import (
 // identifier and a block height for which the metric is reported.
 type MEVDatapoint struct {
 	Height              uint32                  `json:"block_height"`
+	Proposer            string                  `json:"proposer"`
 	ChainID             string                  `json:"chain_id"`
 	VolumeQuoteQuantums map[ClobPairId]*big.Int `json:"volume_quote_quantums"`
 	MEV                 map[ClobPairId]float32  `json:"mev"`

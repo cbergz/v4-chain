@@ -349,6 +349,7 @@ func (k Keeper) RecordMevMetrics(
 			types.MevMetrics{
 				MevDatapoint: types.MEVDatapoint{
 					Height:              lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
+					Proposer:            proposer.Description.Moniker,
 					ChainID:             ctx.ChainID(),
 					VolumeQuoteQuantums: validatorVolumeQuoteQuantumsPerMarket,
 					MEV:                 mevPerMarket,
